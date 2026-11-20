@@ -340,7 +340,7 @@ export default function App() {
       {/* Средний слой: анимированные вихри, сияние и снег */}
       <div {...midBind} className="absolute -inset-6 pointer-events-none">
         <IceVortices />
-        <Snowfall count={70} />
+        <Snowfall count={25} />
       </div>
       <div className="frost-vignette" />
       <div className="frost-corner" style={{ top: 0, left: 0 }} />
