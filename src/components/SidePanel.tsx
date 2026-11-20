@@ -31,22 +31,72 @@ export default function SidePanel({ open, onToggle, onSubmit }: Props) {
   const [done, setDone] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const uidValid = /^\d{4}$/.test(uid);  async function uploadFile(file: File) {
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Картинка должна быть меньше 2 МБ');
-      return;
-    }
-    const ext = file.name.split('.').pop() || 'png';
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, {
-      contentType: file.type,
+  const uidValid = /^\d{4}$/.test(uid);
+
+  // Downscale + center-crop to a 128x128 square, compressed as webp/jpeg.
+  async function compressImage(file: File): Promise<string> {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('read failed'));
+      reader.readAsDataURL(file);
     });
-    if (upErr) {
-      setError('Не удалось загрузить картинку');
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('decode failed'));
+      el.src = dataUrl;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('no 2d context');
+    const side = Math.min(img.naturalWidth, img.naturalHeight);
+    const sx = (img.naturalWidth - side) / 2;
+    const sy = (img.naturalHeight - side) / 2;
+    ctx.drawImage(img, sx, sy, side, side, 0, 0, 128, 128);
+    return canvas.toDataURL('image/webp', 0.82).startsWith('data:image/webp')
+      ? canvas.toDataURL('image/webp', 0.82)
+      : canvas.toDataURL('image/jpeg', 0.82);
+  }
+
+  async function dataUrlToFile(dataUrl: string): Promise<File> {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    return new File([blob], 'avatar.webp', { type: blob.type || 'image/webp' });
+  }
+
+  async function uploadFile(file: File) {
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Файл должен быть меньше 5 МБ');
       return;
     }
-    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-    setAvatarUrl(data.publicUrl);
+    if (!file.type.startsWith('image/')) {
+      setError('Выберите файл изображения');
+      return;
+    }
+    let compressed: string;
+    try {
+      compressed = await compressImage(file);
+    } catch {
+      setError('Не удалось обработать картинку');
+      return;
+    }
+    // Try Storage first; on any error fall back to a lightweight data URL
+    // saved directly in altar_entries.avatar_url.
+    try {
+      const f = await dataUrlToFile(compressed);
+      const path = `${crypto.randomUUID()}.webp`;
+      const { error: upErr } = await supabase.storage.from('avatars').upload(path, f, {
+        contentType: f.type,
+      });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      setAvatarUrl(data.publicUrl);
+    } catch {
+      setAvatarUrl(compressed);
+    }
     setError(null);
   }
 
@@ -171,11 +221,23 @@ export default function SidePanel({ open, onToggle, onSubmit }: Props) {
                     ))}
                   </div>
                   {avatarUrl && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <img src={avatarUrl} alt="Аватар" className="w-8 h-8 rounded-full object-cover border border-sky-200/40" />
-                      <span className="text-[11px] text-sky-200/70 flex-1 truncate">Своя картинка</span>
-                      <button type="button" className="text-sky-200/60 hover:text-white" onClick={() => setAvatarUrl(null)} aria-label="Убрать аватар">
-                        <X size={14} />
+                    <div className="flex items-center gap-3 mt-2 glass rounded-xl p-2">
+                      <img
+                        src={avatarUrl}
+                        alt="Предпросмотр аватарки"
+                        className="w-14 h-14 rounded-full object-cover border-2 border-sky-300/70 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-sky-100">Ваша аватарка</p>
+                        <p className="text-[10px] text-sky-200/60">Так её увидят на алтаре</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="text-sky-200/60 hover:text-white shrink-0"
+                        onClick={() => setAvatarUrl(null)}
+                        aria-label="Убрать аватар"
+                      >
+                        <X size={16} />
                       </button>
                     </div>
                   )}
