@@ -375,7 +375,7 @@ export default function App() {
                     className={`slot-filled seal cryo-pulse flex flex-col items-center justify-center ${
                       entry.constellation === 6 ? 'slot-c6' : ''
                     }`}
-                    style={{ width: Math.max(slot.size, 74), height: Math.max(slot.size, 74) }}
+                    style={{ width: Math.max(slot.size, 96), height: Math.max(slot.size, 96) }}
                     onMouseEnter={() => setHovered({ entry, slot })}
                     onMouseLeave={() => setHovered(null)}
                     onClick={() => setHovered({ entry, slot })}
@@ -385,10 +385,10 @@ export default function App() {
                         src={entry.avatar_url}
                         alt=""
                         className="rounded-full object-cover border border-sky-100/60 mb-1"
-                        style={{ width: 16, height: 16 }}
+                        style={{ width: 40, height: 40 }}
                       />
                     ) : (
-                      <IconByKey icon={entry.icon} className="w-4 h-4 text-sky-100 mb-0.5 drop-shadow-[0_0_6px_rgba(140,220,255,0.9)]" />
+                      <IconByKey icon={entry.icon} className="w-7 h-7 text-sky-100 mb-0.5 drop-shadow-[0_0_6px_rgba(140,220,255,0.9)]" />
                     )}
                     <span
                       className="font-mono font-extrabold leading-none text-white"
