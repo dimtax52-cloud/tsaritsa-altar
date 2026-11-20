@@ -247,26 +247,35 @@ export default function App() {
 
   const handleAdminUpdate = useCallback(
     async (id: string, patch: Partial<AltarEntry>) => {
-      const { data, error } = await supabase
-        .from('altar_entries')
-        .update(patch)
-        .eq('id', id)
-        .select()
-        .single();
+      const pass = adminPass || window.prompt('Пароль администратора:') || '';
+      const { data, error } = await supabase.rpc('admin_update_entry', {
+        pass,
+        entry_id: id,
+        new_constellation: patch.constellation ?? 0,
+        new_refinement: patch.refinement ?? 0,
+        new_icon: patch.icon ?? 'snowflake',
+        new_message: patch.message ?? null,
+      });
       if (error || !data) {
-        alert('Не удалось сохранить изменения.');
+        setAdminError('Неверный пароль');
+        setShowAdmin(false);
         return;
       }
       setEntries((prev) => prev.map((e) => (e.id === id ? (data as AltarEntry) : e)));
     },
-    []
+    [adminPass]
   );
 
   const handleAdminDelete = useCallback(
     async (id: string) => {
-      const { error } = await supabase.from('altar_entries').delete().eq('id', id);
+      const pass = adminPass || window.prompt('Пароль администратора:') || '';
+      const { error } = await supabase.rpc('admin_delete_entry', {
+        pass,
+        entry_id: id,
+      });
       if (error) {
-        alert('Не удалось удалить запись.');
+        setAdminError('Неверный пароль');
+        setShowAdmin(false);
         return;
       }
       setEntries((prev) => prev.filter((e) => e.id !== id));
@@ -274,8 +283,11 @@ export default function App() {
     []
   );
 
-  const handleAdminLogin = useCallback(() => {
-    if (adminPass === 'tsaritsa777') {
+  const handleAdminLogin = useCallback(async () => {
+    setAdminBusy(true);
+    const { data: ok } = await supabase.rpc('check_admin_password', { pass: adminPass });
+    setAdminBusy(false);
+    if (ok) {
       setShowAdmin(true);
       setShowAdminLock(false);
       setAdminError(null);
