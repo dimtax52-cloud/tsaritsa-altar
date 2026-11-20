@@ -233,12 +233,16 @@ export default function App() {
     []
   );
 
-  const handleDownload = useCallback(() => {
-    const url = renderAltarToDataUrl(slots, bySlot, totals);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'altar-tsaritsa.png';
-    a.click();
+  const handleDownload = useCallback(async () => {
+    try {
+      const url = await renderAltarToDataUrl(videoRef.current, slots, bySlot, totals);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'altar-tsaritsa.png';
+      a.click();
+    } catch {
+      alert('Не удалось сохранить скриншот. Попробуйте ещё раз.');
+    }
   }, [bySlot, totals]);
 
   const handleAdminUpdate = useCallback(
@@ -359,7 +363,7 @@ export default function App() {
                     className={`slot-filled seal cryo-pulse flex flex-col items-center justify-center ${
                       entry.constellation === 6 ? 'slot-c6' : ''
                     }`}
-                    style={{ width: Math.max(slot.size, 64), height: Math.max(slot.size, 64) }}
+                    style={{ width: Math.max(slot.size, 74), height: Math.max(slot.size, 74) }}
                     onMouseEnter={() => setHovered({ entry, slot })}
                     onMouseLeave={() => setHovered(null)}
                     onClick={() => setHovered({ entry, slot })}
@@ -369,22 +373,22 @@ export default function App() {
                         src={entry.avatar_url}
                         alt=""
                         className="rounded-full object-cover border border-sky-100/60 mb-1"
-                        style={{ width: slot.size * 0.32, height: slot.size * 0.32 }}
+                        style={{ width: 16, height: 16 }}
                       />
                     ) : (
-                      <IconByKey icon={entry.icon} className="text-sky-100 mb-1 drop-shadow-[0_0_6px_rgba(140,220,255,0.9)]" />
+                      <IconByKey icon={entry.icon} className="w-4 h-4 text-sky-100 mb-0.5 drop-shadow-[0_0_6px_rgba(140,220,255,0.9)]" />
                     )}
                     <span
                       className="font-mono font-extrabold leading-none text-white"
                       style={{
-                        fontSize: Math.max(slot.size * 0.24, 15),
+                        fontSize: Math.max(slot.size * 0.22, 14),
                         textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
                       }}
                     >
                       {entry.uid_suffix}
                     </span>
                     <span
-                      className={`badge-cr mt-1 ${entry.constellation === 6 ? 'badge-cr-c6' : ''}`}
+                      className={`badge-cr mt-0.5 ${entry.constellation === 6 ? 'badge-cr-c6' : ''}`}
                     >
                       C{entry.constellation}R{entry.refinement}
                     </span>
@@ -480,7 +484,9 @@ export default function App() {
       </div>
 
       {/* Side signup panel */}
-      <SidePanel open={sceneReady && panelOpen} onToggle={() => setPanelOpen((o) => !o)} onSubmit={handleSignup} />
+      {sceneReady && (
+        <SidePanel open={panelOpen} onToggle={() => setPanelOpen((o) => !o)} onSubmit={handleSignup} />
+      )}
 
       {/* Admin lock bottom-right */}
       <div
