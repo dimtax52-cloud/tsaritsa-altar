@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Download, Lock, RefreshCw, Users, Gem, X, KeyRound, Volume2, VolumeX } from 'lucide-react';
-import { supabase, altarAdminUrl, type AltarEntry } from '@/lib/supabase';
+import { supabase, type AltarEntry } from '@/lib/supabase';
 import { buildAltarSlots, type CellSlot } from '@/lib/altarLayout';
 import Snowfall from '@/components/Snowfall';
 import SidePanel from '@/components/SidePanel';
@@ -14,6 +14,15 @@ const FREEZE_AT = 6.0;
 const SLOT_COUNT = 76;
 
 const slots = buildAltarSlots(SLOT_COUNT);
+
+type AltarSignupData = {
+  uid_suffix: string;
+  constellation: number;
+  refinement: number;
+  icon: string;
+  avatar_url: string | null;
+  message: string | null;
+};
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' });
@@ -205,18 +214,19 @@ export default function App() {
   );
 
   const handleSignup = useCallback(
-    async (data: {
-      uid_suffix: string;
-      constellation: number;
-      refinement: number;
-      icon: string;
-      avatar_url: string | null;
-      message: string | null;
-    }): Promise<string | null> => {
-      const { error } = await supabase.from('altar_entries').insert(data);
+    async (data: AltarSignupData): Promise<string | null> => {
+      const { data: row, error } = await supabase
+        .from('altar_entries')
+        .insert(data)
+        .select()
+        .single();
       if (error) {
         if (error.code === '23505') return 'Этот UID уже записан на алтарь.';
         return 'Не удалось записаться. Попробуйте ещё раз.';
+      }
+      if (row) {
+        setEntries((prev) => [...prev, row as AltarEntry]);
+        setCellsIn(true);
       }
       return null;
     },
@@ -231,69 +241,53 @@ export default function App() {
     a.click();
   }, [bySlot, totals]);
 
-  const adminLogin = useCallback(async (password: string): Promise<string | null> => {
-    const res = await fetch(altarAdminUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'login', password }),
-    });
-    if (!res.ok) return 'Неверный пароль';
-    const data = await res.json();
-    if (!data.ok) return 'Неверный пароль';
-    return null;
-  }, []);
-
-  const adminCall = useCallback(
-    async (method: 'PUT' | 'DELETE', token: string, payload: Record<string, unknown>) => {
-      const res = await fetch(altarAdminUrl, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, password: token }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        alert(data?.error ?? 'Не удалось выполнить действие.');
+  const handleAdminUpdate = useCallback(
+    async (id: string, patch: Partial<AltarEntry>) => {
+      const { data, error } = await supabase
+        .from('altar_entries')
+        .update(patch)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error || !data) {
+        alert('Не удалось сохранить изменения.');
+        return;
       }
+      setEntries((prev) => prev.map((e) => (e.id === id ? (data as AltarEntry) : e)));
     },
     []
   );
 
-  const handleAdminUpdate = useCallback(
-    async (id: string, patch: Partial<AltarEntry>) => {
-      const pass = adminPass || window.prompt('Пароль администратора:') || '';
-      await adminCall('PUT', pass, { id, ...patch });
-    },
-    [adminCall, adminPass]
-  );
-
   const handleAdminDelete = useCallback(
     async (id: string) => {
-      const pass = adminPass || window.prompt('Пароль администратора:') || '';
-      await adminCall('DELETE', pass, { id });
+      const { error } = await supabase.from('altar_entries').delete().eq('id', id);
+      if (error) {
+        alert('Не удалось удалить запись.');
+        return;
+      }
+      setEntries((prev) => prev.filter((e) => e.id !== id));
     },
-    [adminCall, adminPass]
+    []
   );
 
-  const handleAdminLogin = useCallback(async () => {
-    setAdminBusy(true);
-    const err = await adminLogin(adminPass);
-    setAdminBusy(false);
-    if (err) {
-      setAdminError(err);
-    } else {
+  const handleAdminLogin = useCallback(() => {
+    if (adminPass === 'tsaritsa777') {
       setShowAdmin(true);
       setShowAdminLock(false);
       setAdminError(null);
+      setAdminPass('');
+    } else {
+      setAdminError('Неверный пароль');
     }
-  }, [adminLogin, adminPass]);
+  }, [adminPass]);
 
   useEffect(() => {
     if (sceneReady) tilt.start();
   }, [sceneReady, tilt]);
 
-  const bgBind = tilt.bind(0.3); // задний слой — 0.3x
-  const midBind = tilt.bind(0.7); // вихри и сияние — 0.7x
-  const frontBind = tilt.bind(1.2); // значки и снег — 1.2x
+  const bgBind = tilt.bind(-18, 2.2, 1.6); // задний слой — видео, глубокий сдвиг + наклон
+  const midBind = tilt.bind(28, 3.0, 2.0); // вихри и сияние
+  const frontBind = tilt.bind(58, 3.8, 2.5); // значки и ближний снег
 
   return (
     <div className="relative w-full h-full overflow-hidden select-none">
@@ -306,9 +300,9 @@ export default function App() {
           {...bgBind}
           className="absolute"
           style={{
-            inset: '-3%',
-            width: '106%',
-            height: '106%',
+            inset: '-5%',
+            width: '110%',
+            height: '110%',
             transform: sceneReady ? undefined : 'none',
           }}
         >
@@ -365,7 +359,7 @@ export default function App() {
                     className={`slot-filled seal cryo-pulse flex flex-col items-center justify-center ${
                       entry.constellation === 6 ? 'slot-c6' : ''
                     }`}
-                    style={{ width: slot.size, height: slot.size }}
+                    style={{ width: Math.max(slot.size, 64), height: Math.max(slot.size, 64) }}
                     onMouseEnter={() => setHovered({ entry, slot })}
                     onMouseLeave={() => setHovered(null)}
                     onClick={() => setHovered({ entry, slot })}
@@ -381,8 +375,11 @@ export default function App() {
                       <IconByKey icon={entry.icon} className="text-sky-100 mb-1 drop-shadow-[0_0_6px_rgba(140,220,255,0.9)]" />
                     )}
                     <span
-                      className="font-mono font-bold leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
-                      style={{ fontSize: slot.size * 0.24 }}
+                      className="font-mono font-extrabold leading-none text-white"
+                      style={{
+                        fontSize: Math.max(slot.size * 0.24, 15),
+                        textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
+                      }}
                     >
                       {entry.uid_suffix}
                     </span>
@@ -394,10 +391,10 @@ export default function App() {
                   </button>
                 ) : (
                   <div
-                    className="slot-empty seal flex items-center justify-center opacity-60"
+                    className="slot-empty seal flex items-center justify-center"
                     style={{ width: slot.size, height: slot.size }}
                   >
-                    <span className="text-sky-200/25 font-mono" style={{ fontSize: slot.size * 0.22 }}>
+                    <span className="text-sky-100/70 font-mono" style={{ fontSize: slot.size * 0.22 }}>
                       +
                     </span>
                   </div>
