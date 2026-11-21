@@ -410,10 +410,10 @@ export default function App() {
 
       {/* Средний слой: анимированные вихри, сияние и метель */}
       <div {...midBind} className="absolute -inset-6 pointer-events-none">
-        <IceVortices />
+     
         <Snowfall count={45} totalPower={totalPower} storm={sceneReady} />
       </div>
-      <div className="frost-vignette" />
+     
 
 
       {/* Передний слой: значки анонов и парящие снежинки */}
