@@ -5,7 +5,6 @@ import { buildAltarSlots, type CellSlot } from '@/lib/altarLayout';
 import Snowfall from '@/components/Snowfall';
 import SidePanel from '@/components/SidePanel';
 import AdminPanel from '@/components/AdminPanel';
-import IceVortices from '@/components/IceVortices';
 import { IconByKey } from '@/lib/icons';
 import { renderAltarToDataUrl } from '@/lib/exportCanvas';
 
