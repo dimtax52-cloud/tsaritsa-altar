@@ -434,7 +434,7 @@ export default function App() {
       {/* Средний слой: анимированные вихри, сияние и метель */}
       <div {...midBind} className="absolute -inset-6 pointer-events-none">
      
-        <Snowfall count={45} totalPower={totalPower} storm={sceneReady} />
+        <Snowfall count={30} totalPower={totalPower} storm={sceneReady} />
       </div>
      
 
