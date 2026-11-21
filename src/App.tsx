@@ -414,7 +414,16 @@ export default function App() {
             transform: sceneReady ? undefined : 'none',
             transition: 'opacity 1s ease',
           }}
-          key={act}
+          <div
+          {...bgBind}
+          className="absolute"
+          style={{
+            inset: '-5%',
+            width: '110%',
+            height: '110%',
+            transform: sceneReady ? undefined : 'none',
+            transition: 'opacity 1s ease',
+          }}
         >
           <video
             ref={videoRef}
@@ -422,8 +431,9 @@ export default function App() {
             muted
             playsInline
             preload="auto"
-            className="w-full h-full object-cover opacity-0 transition-opacity duration-300"
-            onLoadedData={(e) => {
+            className="w-full h-full object-cover"
+          />
+        </div>
               e.currentTarget.classList.remove('opacity-0');
             }}
           />
