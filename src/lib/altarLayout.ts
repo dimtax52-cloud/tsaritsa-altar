@@ -27,7 +27,7 @@ export function buildAltarSlots(count = 152): CellSlot[] {
   };
 
   // Компактный, но безопасный зазор: снежинки стоят плотно друг к другу, но не перекрываются
-  const tooClose = (x: number, y: number, minDist = 6.3) => {
+  const tooClose = (x: number, y: number, minDist = 7.5) => {
     for (const s of slots) {
       const dx = (s.x - x) * 1.45;
       const dy = s.y - y;
@@ -37,7 +37,7 @@ export function buildAltarSlots(count = 152): CellSlot[] {
   };
 
   // Безопасные отступы от краёв экрана, чтобы даже крупные C6-снежинки не обрезались при 3D-параллаксе
-  const push = (x: number, y: number, size: number, minDist = 6.3) => {
+  const push = (x: number, y: number, size: number, minDist = 7.5) => {
     if (x < 5.5 || x > 92.5 || y < 8 || y > 91) return false;
     if (inExclusion(x, y)) return false;
     if (tooClose(x, y, minDist)) return false;
