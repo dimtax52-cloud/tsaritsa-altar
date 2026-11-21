@@ -244,13 +244,9 @@ body {
 
 /* Frost vignette / crystal edges */
 .frost-vignette {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at center, transparent 55%, rgba(5, 15, 25, 0.55) 100%),
-    linear-gradient(180deg, rgba(140, 200, 240, 0.06), transparent 30%, transparent 70%, rgba(140, 200, 240, 0.06));
+  display: none;
 }
+
 
 .frost-corner {
   position: absolute;
