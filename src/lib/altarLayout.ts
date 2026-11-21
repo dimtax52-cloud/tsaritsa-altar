@@ -20,11 +20,21 @@ export function buildAltarSlots(count = 152): CellSlot[] {
   const slots: CellSlot[] = [];
 
   // Широкая запретная зона в центре вокруг Царицы и замка, чтобы слоты не лезли в середину
-  const inExclusion = (x: number, y: number) => {
+    const inExclusion = (x: number, y: number) => {
+    // Центр (Царица в Акте I)
     const dx = (x - 47) / 26;
     const dy = (y - 50) / 36;
-    return dx * dx + dy * dy < 1;
+    if (dx * dx + dy * dy < 1) return true;
+
+    // Левый нижний угол (Царица на мосту в Акте II)
+    if (x < 42 && y > 54) return true;
+
+    // Левый верхний угол (плашка со счётчиком)
+    if (x < 22 && y < 22) return true;
+
+    return false;
   };
+
 
   // Золотая середина зазора (6.7): колонна идёт плотно, но без наложений
   const tooClose = (x: number, y: number, minDist = 6.7) => {
