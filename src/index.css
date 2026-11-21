@@ -81,7 +81,7 @@ body {
 /* Snowflake arm ring around the crystal plate */
 .snowflake-ring {
   position: absolute;
-  inset: -7px;
+  inset: -12px;
   border-radius: 9999px;
   pointer-events: none;
   background:
