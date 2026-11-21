@@ -81,20 +81,19 @@ body {
 /* Snowflake arm ring around the crystal plate */
 .snowflake-ring {
   position: absolute;
-  inset: -12px;
-  border-radius: 9999px;
+  inset: -14px;
   pointer-events: none;
-  background:
-    repeating-conic-gradient(
-      from 0deg,
-      rgba(190, 235, 255, 0.9) 0deg 6deg,
-      transparent 10deg 60deg
-    );
-  -webkit-mask: radial-gradient(circle, transparent 54%, #000 56%, #000 68%, transparent 70%);
-  mask: radial-gradient(circle, transparent 54%, #000 56%, #000 68%, transparent 70%);
-  opacity: 0.8;
-  filter: drop-shadow(0 0 6px rgba(150, 220, 255, 0.9));
+  background: radial-gradient(circle, rgba(160, 230, 255, 0.95) 45%, rgba(220, 248, 255, 0.85) 100%);
+  clip-path: polygon(
+    50% 0%, 54% 28%, 72% 14%, 64% 36%, 93% 25%, 70% 46%,
+    100% 50%, 70% 54%, 93% 75%, 64% 64%, 72% 86%, 54% 72%,
+    50% 100%, 46% 72%, 28% 86%, 36% 64%, 7% 75%, 30% 54%,
+    0% 50%, 30% 46%, 7% 25%, 36% 36%, 28% 14%, 46% 28%
+  );
+  filter: drop-shadow(0 0 8px rgba(140, 225, 255, 0.95));
+  z-index: -1;
 }
+
 
 /* Constellation sizing: C0 -> C6 */
 .const-c0 { --cell: 72px; box-shadow: 0 0 14px rgba(125, 211, 252, 0.45), 0 0 26px rgba(80, 170, 240, 0.25), inset 0 0 10px rgba(125, 211, 252, 0.2), 0 6px 18px rgba(0, 0, 0, 0.55); }
