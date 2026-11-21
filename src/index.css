@@ -63,13 +63,14 @@ body {
 }
 
 /* Constellation sizing: C0 (82px) -> C6 (126px), glow strength grows too */
-.const-c0 { --cell: 74px; --av: 46px; filter: drop-shadow(0 0 8px rgba(125, 211, 252, 0.5)) drop-shadow(0 0 16px rgba(80, 170, 240, 0.28)); }
-.const-c1 { --cell: 78px; --av: 48px; filter: drop-shadow(0 0 9px rgba(125, 211, 252, 0.55)) drop-shadow(0 0 18px rgba(80, 170, 240, 0.32)); }
-.const-c2 { --cell: 82px; --av: 50px; filter: drop-shadow(0 0 10px rgba(125, 211, 252, 0.6)) drop-shadow(0 0 22px rgba(80, 170, 240, 0.36)); }
-.const-c3 { --cell: 86px; --av: 51px; filter: drop-shadow(0 0 12px rgba(125, 211, 252, 0.65)) drop-shadow(0 0 26px rgba(80, 170, 240, 0.4)); }
-.const-c4 { --cell: 90px; --av: 52px; filter: drop-shadow(0 0 13px rgba(125, 211, 252, 0.7)) drop-shadow(0 0 30px rgba(80, 170, 240, 0.44)); }
-.const-c5 { --cell: 94px; --av: 53px; filter: drop-shadow(0 0 15px rgba(125, 211, 252, 0.75)) drop-shadow(0 0 34px rgba(80, 170, 240, 0.48)); }
-.const-c6 { --cell: 96px; --av: 54px; color: rgba(255, 220, 140, 0.95); filter: drop-shadow(0 0 14px rgba(255, 205, 120, 0.85)) drop-shadow(0 0 34px rgba(255, 180, 70, 0.55)); }
+.const-c0 { --cell: 74px; --av: 46px; }
+.const-c1 { --cell: 78px; --av: 48px; }
+.const-c2 { --cell: 82px; --av: 50px; }
+.const-c3 { --cell: 86px; --av: 51px; }
+.const-c4 { --cell: 90px; --av: 52px; }
+.const-c5 { --cell: 94px; --av: 53px; }
+.const-c6 { --cell: 98px; --av: 54px; color: rgba(255, 220, 140, 0.95); filter: drop-shadow(0 0 12px rgba(255, 205, 120, 0.75)); }
+
 
 /* C6 gentle levitation */
 @keyframes c6Float {
