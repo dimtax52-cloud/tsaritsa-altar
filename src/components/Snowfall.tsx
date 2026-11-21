@@ -64,22 +64,7 @@ export default function Snowfall({ count = 60, totalPower = 0, storm = false }: 
           }}
         />
       ))}
-      {/* Wind streaks during a storm */}
-      {storm &&
-        Array.from({ length: 7 }, (_, i) => (
-          <span
-            key={`w${i}`}
-            className="absolute h-px"
-            style={{
-              top: `${8 + i * 13}%`,
-              left: '-15%',
-              width: '130%',
-              background:
-                'linear-gradient(90deg, transparent, rgba(210,240,255,0.35), transparent)',
-              animation: `windStreak ${2.2 + i * 0.5}s linear ${-i * 0.7}s infinite`,
-            }}
-          />
-        ))}
+
       <style>{`@keyframes windStreak { from { transform: translateX(0); } to { transform: translateX(60%); } }`}</style>
     </div>
   );
