@@ -441,9 +441,7 @@ export default function App() {
 
       {/* Передний слой: значки анонов и парящие снежинки */}
       <div {...frontBind} className="absolute -inset-3">
-        <div className="absolute inset-0 pointer-events-none">
-          <Snowfall count={30} totalPower={totalPower} storm={sceneReady} />
-        </div>
+        
         <div className="absolute inset-0">
                    {actSlots.map((slot, i) => {
             const entry = actBySlot[i];
