@@ -10,7 +10,7 @@ type Props = {
 };
 
 export default function Snowfall({ count = 60, totalPower = 0, storm = false }: Props) {
-  const { flakes, wind } = useMemo(() => {
+  const { flakes } = useMemo(() => {
     // Blizzard density scales with altar power: 45 -> 160 flakes.
     const n =
       totalPower > 0 ? Math.round(Math.min(160, Math.max(45, 45 + totalPower * 4))) : count;

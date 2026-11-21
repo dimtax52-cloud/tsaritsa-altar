@@ -83,10 +83,3 @@ export function buildAltarSlots(count = 152): CellSlot[] {
 
   return slots.slice(0, Math.min(count, 152));
 }
-
-// Deterministic mirror of buildAltarSlots: the same ellipse layout with a
-// different seed and a horizontal flip, so Act II circles Act I.
-export function buildActTwoSlots(count = 76): CellSlot[] {
-  const slots = buildAltarSlots(count + 76).slice(76);
-  return slots.map((s) => ({ ...s, x: 100 - s.x }));
-}

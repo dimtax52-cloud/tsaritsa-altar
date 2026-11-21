@@ -275,7 +275,7 @@ export default function App() {
         videoRef.current,
         actSlots,
         actBySlot,
-        { ...totals, act }
+        { total: actBySlot.filter(Boolean).length, c6: actBySlot.filter((e) => e?.constellation === 6).length }
       );
       const a = document.createElement('a');
       a.href = url;
@@ -427,7 +427,6 @@ export default function App() {
         <div className="absolute inset-0">
           {actSlots.map((slot, i) => {
             const entry = actBySlot[i];
-            const cell = entry ? entry.constellation + 1 : 0;
             return (
               <div
                 key={`${act}-${slot.id}`}
