@@ -3,6 +3,7 @@ import { Download, Lock, RefreshCw, Users, Gem, X, KeyRound, Volume2, VolumeX, P
 import { supabase, type AltarEntry } from '@/lib/supabase';
 import { buildAltarSlots, type CellSlot } from '@/lib/altarLayout';
 import Snowfall from '@/components/Snowfall';
+import SnowflakeShape from '@/components/SnowflakeShape';
 import SidePanel from '@/components/SidePanel';
 import AdminPanel from '@/components/AdminPanel';
 import { IconByKey } from '@/lib/icons';
@@ -27,6 +28,18 @@ type AltarSignupData = {
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' });
 }
+
+function actOfEntry(e: AltarEntry) {
+  const idx = entriesIndexOf(e);
+  return idx >= 0 && idx < ACT_SIZE ? 1 : 2;
+}
+
+function entriesIndexOf(e: AltarEntry) {
+  return actIndexRef.current.indexOf(e);
+}
+
+// Shared ref so the module-level helper can find an entry's position.
+const actIndexRef: { current: AltarEntry[] } = { current: [] };
 
 // 3D tilt + parallax: layers translate at different speeds, the background
 // layer additionally rotates in perspective for a real angle-of-view shift.
@@ -81,6 +94,7 @@ export default function App() {
   const [entries, setEntries] = useState<AltarEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState<{ entry: AltarEntry; slot: CellSlot } | null>(null);
+  const [selected, setSelected] = useState<AltarEntry | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [showAdminLock, setShowAdminLock] = useState(false);
   const [adminPass, setAdminPass] = useState('');
@@ -341,6 +355,16 @@ export default function App() {
     if (sceneReady) tilt.start();
   }, [sceneReady, tilt]);
 
+  // Close the detail card on Esc.
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelected(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selected]);
+
   const replayIntro = useCallback(() => {
     setCellsIn(false);
     finishedRef.current = false;
@@ -441,44 +465,55 @@ export default function App() {
               >
                 {entry ? (
                   <button
-                    className={`slot-filled const-c${entry.constellation} relative flex flex-col items-center justify-center ${
-                      entry.constellation === 6 ? 'slot-c6' : ''
-                    }`}
+                    className={`slot-filled const-c${entry.constellation} relative flex items-center justify-center`}
                     style={{ width: `var(--cell)`, height: `var(--cell)` }}
                     onMouseEnter={() => setHovered({ entry, slot })}
                     onMouseLeave={() => setHovered(null)}
-                    onClick={() => setHovered({ entry, slot })}
+                    onClick={() => setSelected(entry)}
                   >
-                    <span className="snowflake-ring" />
-                    {entry.icon === 'custom' && entry.avatar_url ? (
-                      <img
-                        src={entry.avatar_url}
-                        alt=""
-                        className="rounded-full object-cover border border-sky-100/60 mb-1 relative z-10"
-                        style={{ width: 28, height: 28 }}
-                      />
-                    ) : (
-                      <IconByKey icon={entry.icon} className="w-5 h-5 text-sky-100 mb-1 relative z-10 drop-shadow-[0_0_6px_rgba(140,220,255,0.9)]" />
-                    )}
+                    <SnowflakeShape className="absolute inset-0 w-full h-full" />
                     <span
-                      className="font-mono font-extrabold leading-none text-white relative z-10"
-                      style={{
-                        fontSize: 15,
-                        textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
-                      }}
-                    >
-                      {entry.uid_suffix}
-                    </span>
-                    <span className={`badge-cr mt-0.5 relative z-10 ${entry.constellation === 6 ? 'badge-cr-c6' : ''}`}>
-                      C{entry.constellation}R{entry.refinement}
+                      className="cell-plate"
+                      style={{ width: '56%', height: '56%' }}
+                    />
+                    <span className="cell-inner flex flex-col items-center justify-center">
+                      {entry.icon === 'custom' && entry.avatar_url ? (
+                        <img
+                          src={entry.avatar_url}
+                          alt=""
+                          className="rounded-full object-cover border border-sky-100/70 mb-0.5"
+                          style={{ width: 'var(--av)', height: 'var(--av)' }}
+                        />
+                      ) : (
+                        <IconByKey
+                          icon={entry.icon}
+                          className="text-sky-100 mb-1 drop-shadow-[0_0_6px_rgba(140,220,255,0.9)]"
+                          style={{ width: 'var(--av)', height: 'var(--av)' }}
+                        />
+                      )}
+                      <span
+                        className="font-mono font-extrabold leading-none text-white"
+                        style={{
+                          fontSize: 15,
+                          textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
+                        }}
+                      >
+                        {entry.uid_suffix}
+                      </span>
+                      <span
+                        className={`badge-cr mt-0.5 ${entry.constellation === 6 ? 'badge-cr-c6' : ''}`}
+                      >
+                        C{entry.constellation}R{entry.refinement}
+                      </span>
                     </span>
                   </button>
                 ) : (
                   <div
-                    className="slot-empty seal flex items-center justify-center"
+                    className="slot-empty relative flex items-center justify-center"
                     style={{ width: slot.size, height: slot.size }}
                   >
-                    <span className="text-sky-100/70 font-mono" style={{ fontSize: slot.size * 0.22 }}>
+                    <SnowflakeShape className="absolute inset-0 w-full h-full" />
+                    <span className="plus-sign text-sky-100/70 font-mono" style={{ fontSize: slot.size * 0.22 }}>
                       +
                     </span>
                   </div>
@@ -627,6 +662,50 @@ export default function App() {
           onUpdate={handleAdminUpdate}
           onDelete={handleAdminDelete}
         />
+      )}
+
+      {/* Detail card — opened by clicking a filled snowflake */}
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm fade-in"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="glass rounded-2xl w-full max-w-sm p-6 rise-in relative text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-3 right-3 text-sky-200/70 hover:text-white"
+              onClick={() => setSelected(null)}
+              aria-label="Закрыть"
+            >
+              <X size={20} />
+            </button>
+            {selected.icon === 'custom' && selected.avatar_url ? (
+              <img
+                src={selected.avatar_url}
+                alt=""
+                className="w-20 h-20 rounded-full object-cover border-2 border-sky-300/70 mx-auto shadow-[0_0_24px_rgba(125,211,252,0.5)]"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center bg-sky-950/60 border-2 border-sky-300/70 shadow-[0_0_24px_rgba(125,211,252,0.5)]">
+                <IconByKey icon={selected.icon} className="w-10 h-10 text-sky-100" />
+              </div>
+            )}
+            <p className="font-mono text-3xl tracking-[0.35em] text-sky-50 mt-4">{selected.uid_suffix}</p>
+            <p className="text-sky-300 mt-1">
+              Созвездие C{selected.constellation} • Пробуждение R{selected.refinement}
+            </p>
+            <p className="text-xs text-sky-200/60 mt-1">
+              Акт {actOfEntry(selected)} • {fmtDate(selected.created_at)}
+            </p>
+            {selected.message && (
+              <p className="font-display text-lg text-sky-100/90 italic mt-4 leading-relaxed">
+                «{selected.message}»
+              </p>
+            )}
+          </div>
+        </div>
       )}
 
       {loading && (

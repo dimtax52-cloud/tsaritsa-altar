@@ -14,24 +14,33 @@ export const ICON_LABELS: Record<IconKey, string> = {
   swords: 'Мечи',
 };
 
-export function IconByKey({ icon, className }: { icon: string; className?: string }) {
+export function IconByKey({
+  icon,
+  className,
+  style,
+}: {
+  icon: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const pass = { className, style };
   switch (icon as IconKey) {
     case 'crown':
-      return <Crown className={className} />;
+      return <Crown {...pass} />;
     case 'mask':
-      return <Theater className={className} />;
+      return <Theater {...pass} />;
     case 'cryoeye':
-      return <Eye className={className} />;
+      return <Eye {...pass} />;
     case 'star':
-      return <Star className={className} />;
+      return <Star {...pass} />;
     case 'iceheart':
-      return <Heart className={className} />;
+      return <Heart {...pass} />;
     case 'gem':
-      return <Gem className={className} />;
+      return <Gem {...pass} />;
     case 'swords':
-      return <Swords className={className} />;
+      return <Swords {...pass} />;
     default:
-      return <Snowflake className={className} />;
+      return <Snowflake {...pass} />;
   }
 }
 
