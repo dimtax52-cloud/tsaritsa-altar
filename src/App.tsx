@@ -321,7 +321,7 @@ export default function App() {
       }
       setEntries((prev) => prev.filter((e) => e.id !== id));
     },
-    []
+    [adminPass]
   );
 
   const handleAdminLogin = useCallback(async () => {
@@ -332,7 +332,7 @@ export default function App() {
       setShowAdmin(true);
       setShowAdminLock(false);
       setAdminError(null);
-      setAdminPass('');
+  
     } else {
       setAdminError('Неверный пароль');
     }
