@@ -19,17 +19,16 @@ export function buildAltarSlots(count = 152): CellSlot[] {
   const rng = mulberry32(9931);
   const slots: CellSlot[] = [];
 
-  // Зона в центре вокруг Царицы всегда остаётся свободной
+  // Широкая запретная зона в центре вокруг Царицы и замка, чтобы слоты не лезли в середину
   const inExclusion = (x: number, y: number) => {
-    const dx = (x - 44) / 21;
-    const dy = (y - 50) / 31;
+    const dx = (x - 47) / 28;
+    const dy = (y - 50) / 36;
     return dx * dx + dy * dy < 1;
   };
 
-  // Проверка, чтобы соседние снежинки (даже крупные C6 ~112px) не наезжали друг на друга
-  const tooClose = (x: number, y: number, minDist = 8.2) => {
+  // Компактный, но безопасный зазор: снежинки стоят плотно друг к другу, но не перекрываются
+  const tooClose = (x: number, y: number, minDist = 6.3) => {
     for (const s of slots) {
-      // Переводим проценты в условные единицы экрана 16:9 для точного кругового зазора
       const dx = (s.x - x) * 1.45;
       const dy = s.y - y;
       if (Math.hypot(dx, dy) < minDist) return true;
@@ -37,51 +36,51 @@ export function buildAltarSlots(count = 152): CellSlot[] {
     return false;
   };
 
-  const push = (x: number, y: number, size: number, minDist = 8.2) => {
-    if (x < 4.5 || x > 95.5 || y < 8 || y > 91) return false;
+  const push = (x: number, y: number, size: number, minDist = 6.3) => {
+    if (x < 3.5 || x > 96.5 || y < 7 || y > 92) return false;
     if (inExclusion(x, y)) return false;
     if (tooClose(x, y, minDist)) return false;
-    slots.push({ id: slots.length, x, y, size: size + (rng() - 0.5) * 6, angle: rng() * 360 });
+    slots.push({ id: slots.length, x, y, size: size + (rng() - 0.5) * 4, angle: rng() * 360 });
     return true;
   };
 
-  // Основные дуги справа и слева (9 шагов сверху вниз с широким зазором)
-  for (let i = 0; i < 9; i++) {
-    const t = i / 8;
+  // 1. Внешняя дуга у правого и левого краёв (максимально далеко от центра)
+  for (let i = 0; i < 12; i++) {
+    const t = i / 11;
+    const y = 10 + t * 79;
+    const swayR = Math.sin(t * Math.PI * 2.0) * 2.5;
+    push(93.5 - t * 3.5 + swayR, y, 52, 6.4);
+
+    const swayL = Math.sin(t * Math.PI * 2.0 + 0.6) * 2.5;
+    push(5.5 + t * 3.0 + swayL, y, 50, 6.4);
+  }
+
+  // 2. Вторая параллельная дуга чуть ближе к краю (в шахматном порядке)
+  for (let i = 0; i < 11; i++) {
+    const t = (i + 0.5) / 11;
     const y = 11 + t * 77;
-    const swayR = Math.sin(t * Math.PI * 2.1) * 4.2;
-    push(88 - t * 5 + swayR, y, 54 - t * 6, 8.6);
+    const swayR = Math.sin(t * Math.PI * 2.2 + 1.0) * 2.5;
+    push(85.5 - t * 3.5 + swayR, y, 48, 6.3);
 
-    const swayL = Math.sin(t * Math.PI * 2.1 + 0.7) * 3.8;
-    push(8 + t * 4.5 + swayL, y, 52 - t * 5, 8.6);
+    const swayL = Math.sin(t * Math.PI * 2.2 + 1.6) * 2.5;
+    push(12.5 + t * 3.0 + swayL, y, 48, 6.3);
   }
 
-  // Вторая внутренняя линия вихрей справа и слева (со сдвигом по высоте в шахматном порядке)
-  for (let i = 0; i < 8; i++) {
-    const t = (i + 0.5) / 8;
-    const y = 11 + t * 77;
-    const swayR = Math.sin(t * Math.PI * 2.4 + 1.1) * 3.5;
-    push(73 + swayR, y, 48, 8.4);
-
-    const swayL = Math.sin(t * Math.PI * 2.4 + 1.8) * 3.2;
-    push(20 + swayL, y, 48, 8.4);
+  // 3. Нижний снежный шлейф и верхние углы
+  for (let i = 0; i < 12; i++) {
+    const x = 8 + (i / 11) * 84;
+    push(x, 89 - Math.sin((i / 11) * Math.PI) * 2.5, 46, 6.2);
+    push(x, 9 + Math.sin((i / 11) * Math.PI) * 2.0, 46, 6.2);
   }
 
-  // Верхняя небесная дуга и нижний снежный край
-  for (let i = 0; i < 10; i++) {
-    const x = 14 + (i / 9) * 72;
-    push(x, 10 + Math.sin((i / 9) * Math.PI) * 3, 46, 8.2);
-    push(x, 88 - Math.sin((i / 9) * Math.PI) * 3, 46, 8.2);
-  }
-
-  // Аккуратное дозаполнение оставшихся мест без наложений (сначала с широким зазором, потом плотнее)
-  const passes = [8.0, 6.8, 5.8];
+  // 4. Аккуратное дозаполнение оставшихся мест по краям без наложений
+  const passes = [6.2, 5.5, 4.9];
   for (const dist of passes) {
     let tries = 0;
-    while (slots.length < count && tries < 1400) {
+    while (slots.length < count && tries < 1600) {
       tries++;
-      const x = 4.5 + rng() * 91;
-      const y = 8 + rng() * 83;
+      const x = 3.5 + rng() * 93;
+      const y = 7 + rng() * 85;
       push(x, y, 44, dist);
     }
   }
