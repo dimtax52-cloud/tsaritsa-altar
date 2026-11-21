@@ -414,10 +414,7 @@ export default function App() {
         <Snowfall count={45} totalPower={totalPower} storm={sceneReady} />
       </div>
       <div className="frost-vignette" />
-      <div className="frost-corner" style={{ top: 0, left: 0 }} />
-      <div className="frost-corner" style={{ top: 0, right: 0, transform: 'scaleX(-1)' }} />
-      <div className="frost-corner" style={{ bottom: 0, left: 0, transform: 'scaleY(-1)' }} />
-      <div className="frost-corner" style={{ bottom: 0, right: 0, transform: 'scale(-1)' }} />
+
 
       {/* Передний слой: значки анонов и парящие снежинки */}
       <div {...frontBind} className="absolute -inset-3">
