@@ -26,7 +26,7 @@ export function buildAltarSlots(count = 152): CellSlot[] {
     return dx * dx + dy * dy < 1;
   };
 
-  // Компактный, но безопасный зазор: снежинки стоят плотно друг к другу, но не перекрываются
+  // Увеличенный зазор (7.5), чтобы даже крупные C6-снежинки не касались соседей
   const tooClose = (x: number, y: number, minDist = 7.5) => {
     for (const s of slots) {
       const dx = (s.x - x) * 1.45;
@@ -45,15 +45,15 @@ export function buildAltarSlots(count = 152): CellSlot[] {
     return true;
   };
 
-  // 1. Внешняя дуга у правого и левого краёв (с запасом от границ экрана)
+  // 1. Внешняя дуга у правого и левого краёв (с запасом от границ экрана и между слотами)
   for (let i = 0; i < 12; i++) {
     const t = i / 11;
     const y = 10 + t * 79;
     const swayR = Math.sin(t * Math.PI * 2.0) * 2.2;
-    push(90.0 - t * 3.0 + swayR, y, 52, 6.4);
+    push(90.0 - t * 3.0 + swayR, y, 52, 7.5);
 
     const swayL = Math.sin(t * Math.PI * 2.0 + 0.6) * 2.2;
-    push(7.5 + t * 2.5 + swayL, y, 50, 6.4);
+    push(7.5 + t * 2.5 + swayL, y, 50, 7.5);
   }
 
   // 2. Вторая параллельная дуга чуть ближе к краю (в шахматном порядке)
@@ -61,21 +61,21 @@ export function buildAltarSlots(count = 152): CellSlot[] {
     const t = (i + 0.5) / 11;
     const y = 11 + t * 77;
     const swayR = Math.sin(t * Math.PI * 2.2 + 1.0) * 2.2;
-    push(82.5 - t * 3.0 + swayR, y, 48, 6.3);
+    push(82.5 - t * 3.0 + swayR, y, 48, 7.5);
 
     const swayL = Math.sin(t * Math.PI * 2.2 + 1.6) * 2.2;
-    push(14.5 + t * 2.5 + swayL, y, 48, 6.3);
+    push(14.5 + t * 2.5 + swayL, y, 48, 7.5);
   }
 
   // 3. Нижний снежный шлейф и верхние углы
   for (let i = 0; i < 12; i++) {
     const x = 9 + (i / 11) * 81;
-    push(x, 89 - Math.sin((i / 11) * Math.PI) * 2.5, 46, 6.2);
-    push(x, 9 + Math.sin((i / 11) * Math.PI) * 2.0, 46, 6.2);
+    push(x, 89 - Math.sin((i / 11) * Math.PI) * 2.5, 46, 7.5);
+    push(x, 9 + Math.sin((i / 11) * Math.PI) * 2.0, 46, 7.5);
   }
 
   // 4. Аккуратное дозаполнение оставшихся мест по краям без наложений
-  const passes = [6.2, 5.5, 4.9];
+  const passes = [7.5, 6.4, 5.5];
   for (const dist of passes) {
     let tries = 0;
     while (slots.length < count && tries < 1600) {
