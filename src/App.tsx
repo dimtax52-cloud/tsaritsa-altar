@@ -499,7 +499,7 @@ export default function App() {
                           textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
                         }}
 
-                        }}
+                        
                       >
                         {entry.uid_suffix}
                       </span>
