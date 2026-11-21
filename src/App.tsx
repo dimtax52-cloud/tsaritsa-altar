@@ -455,7 +455,7 @@ export default function App() {
                 }`}
                 style={{
                   left: `${slot.x}%`,
-                  top: `${slot.y}%`,
+                  top: `${slot.y}%`, zIndex: entry?.constellation === 6 ? 10 : 1,`
                   transform: 'translate(-50%, -50%)',
                   ['--sx' as string]: `${(Math.random() - 0.5) * 260}px`,
                   ['--sy' as string]: `${(Math.random() - 0.5) * 260}px`,
@@ -474,7 +474,7 @@ export default function App() {
                     <SnowflakeShape className="absolute inset-0 w-full h-full" />
                     <span
                       className="cell-plate"
-                      style={{ width: '56%', height: '56%' }}
+                      style={{ width: '68%', height: '68%' }}
                     />
                     <span className="cell-inner flex flex-col items-center justify-center">
                       {entry.icon === 'custom' && entry.avatar_url ? (
@@ -482,7 +482,7 @@ export default function App() {
                           src={entry.avatar_url}
                           alt=""
                           className="rounded-full object-cover border border-sky-100/70 mb-0.5"
-                          style={{ width: 'var(--av)', height: 'var(--av)' }}
+                          style={{ width: 26, height: 26 }}
                         />
                       ) : (
                         <IconByKey
@@ -494,7 +494,7 @@ export default function App() {
                       <span
                         className="font-mono font-extrabold leading-none text-white"
                         style={{
-                          fontSize: 15,
+                          fontSize: 13,
                           textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
                         }}
                       >
