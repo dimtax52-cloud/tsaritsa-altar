@@ -60,18 +60,84 @@ body {
   background: radial-gradient(circle at 35% 30%, rgba(225, 245, 255, 0.3), rgba(150, 210, 250, 0.12) 60%, transparent 75%);
 }
 
-/* Occupied cell — dark ice plate with bright cryo or gold frame */
+/* Occupied cell — glowing cryo snowflake crystal with a round inner plate */
 .slot-filled {
-  background: rgba(8, 20, 38, 0.88);
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 38% 32%, rgba(150, 220, 255, 0.28), transparent 55%),
+    rgba(8, 20, 38, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 2px solid rgba(125, 211, 252, 0.85);
   box-shadow:
+    0 0 0 3px rgba(125, 211, 252, 0.22),
     0 0 18px rgba(125, 211, 252, 0.6),
     0 0 38px rgba(80, 170, 240, 0.35),
     inset 0 0 14px rgba(125, 211, 252, 0.28),
     0 6px 18px rgba(0, 0, 0, 0.6);
   transition: all 0.25s ease;
+}
+
+/* Snowflake arm ring around the crystal plate */
+.snowflake-ring {
+  position: absolute;
+  inset: -7px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      rgba(190, 235, 255, 0.9) 0deg 6deg,
+      transparent 6deg 60deg
+    );
+  -webkit-mask: radial-gradient(circle, transparent 54%, #000 56%, #000 68%, transparent 70%);
+  mask: radial-gradient(circle, transparent 54%, #000 56%, #000 68%, transparent 70%);
+  opacity: 0.8;
+  filter: drop-shadow(0 0 6px rgba(150, 220, 255, 0.9));
+}
+
+/* Constellation sizing: C0 -> C6 */
+.const-c0 { --cell: 72px; box-shadow: 0 0 14px rgba(125, 211, 252, 0.45), 0 0 26px rgba(80, 170, 240, 0.25), inset 0 0 10px rgba(125, 211, 252, 0.2), 0 6px 18px rgba(0, 0, 0, 0.55); }
+.const-c1 { --cell: 78px; }
+.const-c2 { --cell: 84px; }
+.const-c3 { --cell: 90px; }
+.const-c4 { --cell: 96px; }
+.const-c5 { --cell: 102px; }
+.const-c6 { --cell: 112px; }
+
+.slot-filled.const-c0, .slot-filled.const-c1, .slot-filled.const-c2,
+.slot-filled.const-c3, .slot-filled.const-c4, .slot-filled.const-c5 {
+  border-color: rgba(125, 211, 252, 0.85);
+}
+
+.slot-filled.const-c6 {
+  border-color: rgba(255, 215, 130, 0.95);
+  box-shadow:
+    0 0 0 3px rgba(255, 215, 130, 0.3),
+    0 0 22px rgba(255, 200, 100, 0.8),
+    0 0 46px rgba(255, 180, 70, 0.45),
+    inset 0 0 16px rgba(255, 225, 160, 0.35),
+    0 6px 18px rgba(0, 0, 0, 0.6);
+}
+
+.slot-filled.const-c6 .snowflake-ring {
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      rgba(255, 225, 160, 0.95) 0deg 6deg,
+      transparent 6deg 60deg
+    );
+  filter: drop-shadow(0 0 8px rgba(255, 205, 120, 0.95));
+}
+
+/* C6 gentle levitation */
+@keyframes c6Float {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50% { transform: translate(-50%, -50%) translateY(-6px); }
+}
+
+.float-c6 {
+  animation: c6Float 3.2s ease-in-out infinite;
 }
 
 .slot-filled:hover {
@@ -84,7 +150,7 @@ body {
   border-color: rgba(220, 248, 255, 1);
 }
 
-/* C6 holders — golden glow frame */
+/* C6 holders — golden glow frame (kept for admin panel thumbnails) */
 .slot-c6 {
   border-color: rgba(255, 215, 130, 0.95) !important;
   box-shadow:

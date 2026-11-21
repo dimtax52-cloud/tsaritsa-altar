@@ -18,8 +18,9 @@ function mulberry32(seed: number) {
 
 // Badges ride the snow vortices sweeping along the right and left edges and
 // scatter around the rim of the screen. The central zone where the Tsaritsa
-// stands is always kept clear.
-export function buildAltarSlots(count = 76): CellSlot[] {
+// stands is always kept clear. Act I uses the first 76 slots, Act II the
+// next 76 (mirrored circle).
+export function buildAltarSlots(count = 152): CellSlot[] {
   const rng = mulberry32(9931);
   const slots: CellSlot[] = [];
 
@@ -80,5 +81,12 @@ export function buildAltarSlots(count = 76): CellSlot[] {
     if (slots.length > before) placed++;
   }
 
-  return slots.slice(0, count);
+  return slots.slice(0, Math.min(count, 152));
+}
+
+// Deterministic mirror of buildAltarSlots: the same ellipse layout with a
+// different seed and a horizontal flip, so Act II circles Act I.
+export function buildActTwoSlots(count = 76): CellSlot[] {
+  const slots = buildAltarSlots(count + 76).slice(76);
+  return slots.map((s) => ({ ...s, x: 100 - s.x }));
 }
