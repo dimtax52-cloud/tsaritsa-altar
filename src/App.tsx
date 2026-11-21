@@ -445,7 +445,7 @@ export default function App() {
           <Snowfall count={30} totalPower={totalPower} storm={sceneReady} />
         </div>
         <div className="absolute inset-0">
-          {actSlots.map((slot, i) => {
+                   {actSlots.map((slot, i) => {
             const entry = actBySlot[i];
             return (
               <div
@@ -455,7 +455,8 @@ export default function App() {
                 }`}
                 style={{
                   left: `${slot.x}%`,
-                  top: `${slot.y}%`, zIndex: entry?.constellation === 6 ? 10 : 1,`
+                  top: `${slot.y}%`,
+                  zIndex: entry?.constellation === 6 ? 10 : 1,
                   transform: 'translate(-50%, -50%)',
                   ['--sx' as string]: `${(Math.random() - 0.5) * 260}px`,
                   ['--sy' as string]: `${(Math.random() - 0.5) * 260}px`,
@@ -481,14 +482,14 @@ export default function App() {
                         <img
                           src={entry.avatar_url}
                           alt=""
-                          className="rounded-full object-cover border border-sky-100/70 mb-0.5"
+                          className="rounded-full object-cover border border-sky-100/80 mb-0.5"
                           style={{ width: 26, height: 26 }}
                         />
                       ) : (
                         <IconByKey
                           icon={entry.icon}
-                          className="text-sky-100 mb-1 drop-shadow-[0_0_6px_rgba(140,220,255,0.9)]"
-                          style={{ width: 'var(--av)', height: 'var(--av)' }}
+                          className="text-sky-100 mb-0.5 drop-shadow-[0_0_6px_rgba(140,220,255,0.9)]"
+                          style={{ width: 22, height: 22 }}
                         />
                       )}
                       <span
@@ -496,6 +497,8 @@ export default function App() {
                         style={{
                           fontSize: 13,
                           textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
+                        }}
+
                         }}
                       >
                         {entry.uid_suffix}
