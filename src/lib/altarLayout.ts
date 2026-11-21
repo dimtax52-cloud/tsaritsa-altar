@@ -26,8 +26,8 @@ export function buildAltarSlots(count = 152): CellSlot[] {
     return dx * dx + dy * dy < 1;
   };
 
-  // Увеличенный зазор (7.5), чтобы даже крупные C6-снежинки не касались соседей
-  const tooClose = (x: number, y: number, minDist = 7.5) => {
+  // Золотая середина зазора (6.7): колонна идёт плотно, но без наложений
+  const tooClose = (x: number, y: number, minDist = 6.7) => {
     for (const s of slots) {
       const dx = (s.x - x) * 1.45;
       const dy = s.y - y;
@@ -37,7 +37,7 @@ export function buildAltarSlots(count = 152): CellSlot[] {
   };
 
   // Безопасные отступы от краёв экрана, чтобы даже крупные C6-снежинки не обрезались при 3D-параллаксе
-  const push = (x: number, y: number, size: number, minDist = 7.5) => {
+  const push = (x: number, y: number, size: number, minDist = 6.7) => {
     if (x < 5.5 || x > 92.5 || y < 8 || y > 91) return false;
     if (inExclusion(x, y)) return false;
     if (tooClose(x, y, minDist)) return false;
@@ -45,15 +45,15 @@ export function buildAltarSlots(count = 152): CellSlot[] {
     return true;
   };
 
-  // 1. Внешняя дуга у правого и левого краёв (с запасом от границ экрана и между слотами)
+  // 1. Внешняя дуга у правого и левого краёв (с запасом от границ экрана)
   for (let i = 0; i < 12; i++) {
     const t = i / 11;
     const y = 10 + t * 79;
     const swayR = Math.sin(t * Math.PI * 2.0) * 2.2;
-    push(90.0 - t * 3.0 + swayR, y, 52, 7.5);
+    push(90.0 - t * 3.0 + swayR, y, 52, 6.7);
 
     const swayL = Math.sin(t * Math.PI * 2.0 + 0.6) * 2.2;
-    push(7.5 + t * 2.5 + swayL, y, 50, 7.5);
+    push(7.5 + t * 2.5 + swayL, y, 50, 6.7);
   }
 
   // 2. Вторая параллельная дуга чуть ближе к краю (в шахматном порядке)
@@ -61,21 +61,21 @@ export function buildAltarSlots(count = 152): CellSlot[] {
     const t = (i + 0.5) / 11;
     const y = 11 + t * 77;
     const swayR = Math.sin(t * Math.PI * 2.2 + 1.0) * 2.2;
-    push(82.5 - t * 3.0 + swayR, y, 48, 7.5);
+    push(82.5 - t * 3.0 + swayR, y, 48, 6.7);
 
     const swayL = Math.sin(t * Math.PI * 2.2 + 1.6) * 2.2;
-    push(14.5 + t * 2.5 + swayL, y, 48, 7.5);
+    push(14.5 + t * 2.5 + swayL, y, 48, 6.7);
   }
 
   // 3. Нижний снежный шлейф и верхние углы
   for (let i = 0; i < 12; i++) {
     const x = 9 + (i / 11) * 81;
-    push(x, 89 - Math.sin((i / 11) * Math.PI) * 2.5, 46, 7.5);
-    push(x, 9 + Math.sin((i / 11) * Math.PI) * 2.0, 46, 7.5);
+    push(x, 89 - Math.sin((i / 11) * Math.PI) * 2.5, 46, 6.7);
+    push(x, 9 + Math.sin((i / 11) * Math.PI) * 2.0, 46, 6.7);
   }
 
   // 4. Аккуратное дозаполнение оставшихся мест по краям без наложений
-  const passes = [7.5, 6.4, 5.5];
+  const passes = [6.7, 5.8, 5.0];
   for (const dist of passes) {
     let tries = 0;
     while (slots.length < count && tries < 1600) {
