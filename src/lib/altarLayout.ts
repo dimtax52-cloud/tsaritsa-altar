@@ -103,8 +103,9 @@ export function buildAltarSlots(count = 152): CellSlot[] {
 // 24% stay clear for the Tsaritsa, the counter plate and the signup button.
 export function buildMobileSlots(count = 76): CellSlot[] {
   const out: CellSlot[] = [];
-  const leftCols =;
-  const rightCols =;
+    const leftCols = Array.of(9, 21, 33);
+  const rightCols = Array.of(67, 79, 91);
+
   const perCol = Math.ceil(count / 6);
   for (let row = 0; row < perCol && out.length < count; row++) {
     for (let c = 0; c < 6 && out.length < count; c++) {
