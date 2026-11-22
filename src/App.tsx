@@ -35,22 +35,7 @@ function actOfEntry(entries: AltarEntry[], e: AltarEntry) {
   return idx >= 0 && idx < ACT_SIZE ? 1 : 2;
 }
 
-// Mobile portrait layout: 76 slots in 3 columns per side, centre and bottom
-// 24% stay clear for the Tsaritsa, the counter plate and the signup button.
-export function buildMobileSlots(count = 76): CellSlot[] {
-  const slotsM: CellSlot[] = [];
-  const leftCols = [11, 23, 35];
-  const rightCols = [65, 77, 89];
-  const perCol = Math.ceil(count / 6); // ~13 per column
-  for (let row = 0; row < perCol && slotsM.length < count; row++) {
-    for (let c = 0; c < 6 && slotsM.length < count; c++) {
-      const x = c < 3 ? leftCols[c] : rightCols[c - 3];
-      const y = 26 + (row / (perCol - 1)) * 48; // 26% .. 74%
-      slotsM.push({ id: slotsM.length, x, y, size: 0, angle: 0 });
-    }
-  }
-  return slotsM;
-}
+
 
 // 3D tilt + parallax: layers translate at different speeds, the background
 // layer additionally rotates in perspective for a real angle-of-view shift.
