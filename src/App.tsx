@@ -142,7 +142,7 @@ export default function App() {
   const bgmStartedRef = useRef(false);
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
-  const tilt = useTilt(sceneReady && !isTouch, isTouch);
+  const tilt = useTilt(sceneReady, isTouch);
 
   // --- BGM: attempt autoplay; if blocked, start on first pointer/keyboard activity.
   const startBgm = useCallback(() => {
