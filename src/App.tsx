@@ -435,10 +435,11 @@ export default function App() {
             muted
             playsInline
             preload="auto"
-            onLoadedData={() => setVideoReady(true)}
-            onCanPlay={() => setVideoReady(true)}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
-              videoReady ? 'opacity-100' : 'opacity-0'
+            onPlaying={() => {
+  setTimeout(() => setVideoReady(true), 180);
+}}
+className={`w-full h-full object-cover transition-opacity duration-300 ${
+  videoReady ? 'opacity-100' : 'opacity-0'
             }`}
           />
         </div>
