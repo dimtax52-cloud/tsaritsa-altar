@@ -44,6 +44,7 @@ function actOfEntry(entries: AltarEntry[], e: AltarEntry) {
 function useTilt(enabled: boolean, gyro: boolean) {
   const target = useRef({ x: 0, y: 0 });
   const current = useRef({ x: 0, y: 0 });
+  const baseBeta = useRef<number | null>(null);
   const running = useRef(false);
   const layers = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -52,15 +53,17 @@ function useTilt(enabled: boolean, gyro: boolean) {
 
     const onOrient = (e: DeviceOrientationEvent) => {
       if (e.gamma == null || e.beta == null) return;
-      target.current.x = Math.max(-1, Math.min(1, e.gamma / 25));
-      target.current.y = Math.max(-1, Math.min(1, (e.beta - 45) / 25));
-    };
+      if (baseBeta.current === null) baseBeta.current = e.beta;
 
-    const onMotion = (e: DeviceMotionEvent) => {
-      const g = e.accelerationIncludingGravity;
-      if (!g || g.x == null || g.y == null) return;
-      target.current.x = Math.max(-1, Math.min(1, -g.x / 4.5));
-      target.current.y = Math.max(-1, Math.min(1, (g.y - 6) / 4.5));
+      const rawX = e.gamma / 50;
+      const rawY = (e.beta - baseBeta.current) / 50;
+
+      // Мёртвая зона от мелкой дрожи рук
+      const nx = Math.abs(rawX) < 0.06 ? 0 : rawX;
+      const ny = Math.abs(rawY) < 0.06 ? 0 : rawY;
+
+      target.current.x = Math.max(-1, Math.min(1, nx));
+      target.current.y = Math.max(-1, Math.min(1, ny));
     };
 
     const onMove = (e: MouseEvent) => {
@@ -68,25 +71,19 @@ function useTilt(enabled: boolean, gyro: boolean) {
       target.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
     };
 
-      const onTouch = (e: TouchEvent) => {
-   const t = e.touches[0];
-   if (!t) return;
-   target.current.x = (t.clientX / window.innerWidth - 0.5) * 2;
-   target.current.y = (t.clientY / window.innerHeight - 0.5) * 2;
- };
-
-
+    const onTouch = (e: TouchEvent) => {
+      const t = e.touches.item(0);
+      if (!t) return;
+      target.current.x = (t.clientX / window.innerWidth - 0.5) * 2;
+      target.current.y = (t.clientY / window.innerHeight - 0.5) * 2;
+    };
 
     window.addEventListener('deviceorientation', onOrient, true);
-    window.addEventListener('deviceorientationabsolute', onOrient as EventListener, true);
-    window.addEventListener('devicemotion', onMotion, true);
     window.addEventListener('mousemove', onMove);
     window.addEventListener('touchmove', onTouch, { passive: true });
 
     return () => {
       window.removeEventListener('deviceorientation', onOrient, true);
-      window.removeEventListener('deviceorientationabsolute', onOrient as EventListener, true);
-      window.removeEventListener('devicemotion', onMotion, true);
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('touchmove', onTouch);
     };
@@ -109,15 +106,15 @@ function useTilt(enabled: boolean, gyro: boolean) {
 
   const amp = useRef(1);
   useEffect(() => {
-    amp.current = gyro ? 1.2 : 1;
+    amp.current = gyro ? 0.85 : 1;
   }, [gyro]);
 
   const start = useCallback(() => {
     if (running.current) return;
     running.current = true;
     const tick = () => {
-      current.current.x += (target.current.x - current.current.x) * 0.08;
-      current.current.y += (target.current.y - current.current.y) * 0.08;
+      current.current.x += (target.current.x - current.current.x) * 0.04;
+      current.current.y += (target.current.y - current.current.y) * 0.04;
       layers.current.forEach((el, key) => {
         const [depth, rotY, rotX] = key.split(':').map(Number);
         el.style.transform = `perspective(1100px) translate3d(${current.current.x * depth * amp.current}px, ${
@@ -139,6 +136,7 @@ function useTilt(enabled: boolean, gyro: boolean) {
 
   return { start, bind, gyro };
 }
+
 
 
 export default function App() {
