@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Download, Lock, RefreshCw, Users, Gem, X, KeyRound, Volume2, VolumeX, Play } from 'lucide-react';
 import { supabase, type AltarEntry } from '@/lib/supabase';
-import { buildAltarSlots, type CellSlot } from '@/lib/altarLayout';
+import { buildAltarSlots, buildMobileSlots, type CellSlot } from '@/lib/altarLayout';
 import Snowfall from '@/components/Snowfall';
 import SnowflakeShape from '@/components/SnowflakeShape';
 import SidePanel from '@/components/SidePanel';
@@ -35,9 +35,28 @@ function actOfEntry(entries: AltarEntry[], e: AltarEntry) {
   return idx >= 0 && idx < ACT_SIZE ? 1 : 2;
 }
 
+// Mobile portrait layout: 76 slots in 3 columns per side, centre and bottom
+// 24% stay clear for the Tsaritsa, the counter plate and the signup button.
+export function buildMobileSlots(count = 76): CellSlot[] {
+  const slotsM: CellSlot[] = [];
+  const leftCols = [11, 23, 35];
+  const rightCols = [65, 77, 89];
+  const perCol = Math.ceil(count / 6); // ~13 per column
+  for (let row = 0; row < perCol && slotsM.length < count; row++) {
+    for (let c = 0; c < 6 && slotsM.length < count; c++) {
+      const x = c < 3 ? leftCols[c] : rightCols[c - 3];
+      const y = 26 + (row / (perCol - 1)) * 48; // 26% .. 74%
+      slotsM.push({ id: slotsM.length, x, y, size: 0, angle: 0 });
+    }
+  }
+  return slotsM;
+}
+
 // 3D tilt + parallax: layers translate at different speeds, the background
 // layer additionally rotates in perspective for a real angle-of-view shift.
-function useTilt(enabled: boolean) {
+// On touch devices the target is driven by deviceorientation (gamma/beta)
+// instead of the mouse, with half the shift amplitude.
+function useTilt(enabled: boolean, gyro: boolean) {
   const target = useRef({ x: 0, y: 0 });
   const current = useRef({ x: 0, y: 0 });
   const running = useRef(false);
@@ -45,13 +64,47 @@ function useTilt(enabled: boolean) {
 
   useEffect(() => {
     if (!enabled) return;
+    if (gyro) {
+      // gamma: tilt left/right [-90, 90]; beta around ~45deg holding angle [-45, 45].
+      const onOrient = (e: DeviceOrientationEvent) => {
+        if (e.gamma == null || e.beta == null) return;
+        target.current.x = Math.max(-1, Math.min(1, e.gamma / 45));
+        target.current.y = Math.max(-1, Math.min(1, (e.beta - 45) / 45));
+      };
+      window.addEventListener('deviceorientation', onOrient);
+      return () => window.removeEventListener('deviceorientation', onOrient);
+    }
     const onMove = (e: MouseEvent) => {
       target.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
       target.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
     };
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
-  }, [enabled]);
+  }, [enabled, gyro]);
+
+  // iOS: silently request orientation permission on the first touch.
+  useEffect(() => {
+    if (!gyro) return;
+    let granted = false;
+    const request = () => {
+      const D = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };
+      if (typeof D.requestPermission !== 'function' || granted) return;
+      D.requestPermission()
+        .then((state) => {
+          if (state === 'granted') granted = true;
+        })
+        .catch(() => {
+          // User declined — stay static, no errors.
+        });
+    };
+    window.addEventListener('pointerdown', request, { once: true });
+    return () => window.removeEventListener('pointerdown', request);
+  }, [gyro]);
+
+  const amp = useRef(1);
+  useEffect(() => {
+    amp.current = gyro ? 0.5 : 1;
+  }, [gyro]);
 
   const start = useCallback(() => {
     if (running.current) return;
@@ -61,9 +114,9 @@ function useTilt(enabled: boolean) {
       current.current.y += (target.current.y - current.current.y) * 0.06;
       layers.current.forEach((el, key) => {
         const [depth, rotY, rotX] = key.split(':').map(Number);
-        el.style.transform = `perspective(1100px) translate3d(${current.current.x * depth}px, ${
-          current.current.y * depth
-        }px, 0) rotateY(${current.current.x * rotY}deg) rotateX(${-current.current.y * rotX}deg)`;
+        el.style.transform = `perspective(1100px) translate3d(${current.current.x * depth * amp.current}px, ${
+          current.current.y * depth * amp.current
+        }px, 0) rotateY(${current.current.x * rotY * amp.current}deg) rotateX(${-current.current.y * rotX * amp.current}deg)`;
       });
       requestAnimationFrame(tick);
     };
@@ -78,7 +131,7 @@ function useTilt(enabled: boolean) {
     style: { willChange: 'transform' as const },
   }), []);
 
-  return { start, bind };
+  return { start, bind, gyro };
 }
 
 export default function App() {
@@ -104,7 +157,7 @@ export default function App() {
   const bgmStartedRef = useRef(false);
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
-  const tilt = useTilt(sceneReady && !isTouch);
+  const tilt = useTilt(sceneReady && !isTouch, isTouch);
 
   // --- BGM: attempt autoplay; if blocked, start on first pointer/keyboard activity.
   const startBgm = useCallback(() => {
@@ -396,15 +449,25 @@ export default function App() {
   const midBind = tilt.bind(28, 3.0, 2.0); // вихри и сияние
   const frontBind = tilt.bind(58, 3.8, 2.5); // значки и ближний снег
 
-  // На мобильных растягиваем раскладку к краям (6% / 94%), центр остаётся свободным.
+  // Мобильный портрет: отдельная сетка buildMobileSlots; ландшафт — десктопная
+  // раскладка с компактным масштабом ячеек 0.75.
+  const isPortrait = useMediaQuery('(max-width: 768px) and (orientation: portrait)');
+  const isLandscapePhone = isMobile && !isPortrait;
+  const mobileSlots = useMemo(() => buildMobileSlots(ACT_SIZE), []);
   const displaySlots = useMemo(() => {
-    if (!isMobile) return actSlots;
-    return actSlots.map((s) => {
-      const d = s.x - 50;
-      const x = Math.min(94, Math.max(6, 50 + d * 1.3));
-      return { ...s, x };
-    });
-  }, [actSlots, isMobile]);
+    if (isMobile && isPortrait) return mobileSlots;
+    if (isLandscapePhone) {
+      return actSlots.map((s) => ({
+        ...s,
+        size: Math.round(s.size * 0.75),
+      }));
+    }
+    return actSlots;
+  }, [actSlots, isMobile, isPortrait, isLandscapePhone, mobileSlots]);
+
+  // На мобилке в портрете смещаем фокус кадра, чтобы Царица не уезжала за край.
+  const videoObjectPosition =
+    isPortrait ? (act === 1 ? '44% center' : '26% center') : 'center';
 
   const videoSrc = act === 1 ? '/tsaritsa.mp4' : '/tsaritsa2.mp4';
 
@@ -436,11 +499,12 @@ export default function App() {
             playsInline
             preload="auto"
             onPlaying={() => {
-  setTimeout(() => setVideoReady(true), 180);
-}}
-className={`w-full h-full object-cover transition-opacity duration-300 ${
-  videoReady ? 'opacity-100' : 'opacity-0'
+              setTimeout(() => setVideoReady(true), 180);
+            }}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              videoReady ? 'opacity-100' : 'opacity-0'
             }`}
+            style={{ objectPosition: videoObjectPosition }}
           />
         </div>
         <div
