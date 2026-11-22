@@ -8,7 +8,7 @@ import SidePanel from '@/components/SidePanel';
 import AdminPanel from '@/components/AdminPanel';
 import { IconByKey } from '@/lib/icons';
 import { renderAltarToDataUrl } from '@/lib/exportCanvas';
-import { useIsMobile, useIsTouch } from '@/lib/useMediaQuery';
+import { useIsMobile, useIsTouch, useMediaQuery } from '@/lib/useMediaQuery';
 
 const SCATTER_AT = 4.5;
 const FREEZE_AT = 6.0;
@@ -482,7 +482,6 @@ export default function App() {
             src={videoSrc}
             muted
             playsInline
-            style={{ objectPosition: videoObjectPosition }}
             preload="auto"
             onPlaying={() => {
               setTimeout(() => setVideoReady(true), 180);
