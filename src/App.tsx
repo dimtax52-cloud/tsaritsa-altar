@@ -49,39 +49,48 @@ function useTilt(enabled: boolean, gyro: boolean) {
 
   useEffect(() => {
     if (!enabled) return;
-        if (gyro) {
-      const onOrient = (e: DeviceOrientationEvent) => {
-        if (e.gamma == null || e.beta == null) return;
-        target.current.x = Math.max(-1, Math.min(1, e.gamma / 28));
-        target.current.y = Math.max(-1, Math.min(1, (e.beta - 45) / 28));
-      };
-      const onMotion = (e: DeviceMotionEvent) => {
-        const g = e.accelerationIncludingGravity;
-        if (!g || g.x == null || g.y == null) return;
-        target.current.x = Math.max(-1, Math.min(1, -g.x / 5));
-        target.current.y = Math.max(-1, Math.min(1, (g.y - 6) / 5));
-      };
-      window.addEventListener('deviceorientation', onOrient, true);
-      window.addEventListener('deviceorientationabsolute', onOrient as EventListener, true);
-      window.addEventListener('devicemotion', onMotion, true);
-      return () => {
-        window.removeEventListener('deviceorientation', onOrient, true);
-        window.removeEventListener('deviceorientationabsolute', onOrient as EventListener, true);
-        window.removeEventListener('devicemotion', onMotion, true);
-      };
-    }
+
+    const onOrient = (e: DeviceOrientationEvent) => {
+      if (e.gamma == null || e.beta == null) return;
+      target.current.x = Math.max(-1, Math.min(1, e.gamma / 25));
+      target.current.y = Math.max(-1, Math.min(1, (e.beta - 45) / 25));
+    };
+
+    const onMotion = (e: DeviceMotionEvent) => {
+      const g = e.accelerationIncludingGravity;
+      if (!g || g.x == null || g.y == null) return;
+      target.current.x = Math.max(-1, Math.min(1, -g.x / 4.5));
+      target.current.y = Math.max(-1, Math.min(1, (g.y - 6) / 4.5));
+    };
 
     const onMove = (e: MouseEvent) => {
       target.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
       target.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
     };
-    window.addEventListener('mousemove', onMove);
-    return () => window.removeEventListener('mousemove', onMove);
-  }, [enabled, gyro]);
 
-  // iOS: silently request orientation permission on the first touch.
+    const onTouch = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t) return;
+      target.current.x = (t.clientX / window.innerWidth - 0.5) * 2;
+      target.current.y = (t.clientY / window.innerHeight - 0.5) * 2;
+    };
+
+    window.addEventListener('deviceorientation', onOrient, true);
+    window.addEventListener('deviceorientationabsolute', onOrient as EventListener, true);
+    window.addEventListener('devicemotion', onMotion, true);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onTouch, { passive: true });
+
+    return () => {
+      window.removeEventListener('deviceorientation', onOrient, true);
+      window.removeEventListener('deviceorientationabsolute', onOrient as EventListener, true);
+      window.removeEventListener('devicemotion', onMotion, true);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onTouch);
+    };
+  }, [enabled]);
+
   useEffect(() => {
-    if (!gyro) return;
     let granted = false;
     const request = () => {
       const D = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };
@@ -90,25 +99,23 @@ function useTilt(enabled: boolean, gyro: boolean) {
         .then((state) => {
           if (state === 'granted') granted = true;
         })
-        .catch(() => {
-          // User declined — stay static, no errors.
-        });
+        .catch(() => {});
     };
     window.addEventListener('pointerdown', request, { once: true });
     return () => window.removeEventListener('pointerdown', request);
-  }, [gyro]);
+  }, []);
 
   const amp = useRef(1);
   useEffect(() => {
-    amp.current = gyro ? 0.5 : 1;
+    amp.current = gyro ? 1.2 : 1;
   }, [gyro]);
 
   const start = useCallback(() => {
     if (running.current) return;
     running.current = true;
     const tick = () => {
-      current.current.x += (target.current.x - current.current.x) * 0.06;
-      current.current.y += (target.current.y - current.current.y) * 0.06;
+      current.current.x += (target.current.x - current.current.x) * 0.08;
+      current.current.y += (target.current.y - current.current.y) * 0.08;
       layers.current.forEach((el, key) => {
         const [depth, rotY, rotX] = key.split(':').map(Number);
         el.style.transform = `perspective(1100px) translate3d(${current.current.x * depth * amp.current}px, ${
@@ -130,6 +137,7 @@ function useTilt(enabled: boolean, gyro: boolean) {
 
   return { start, bind, gyro };
 }
+
 
 export default function App() {
   const [act, setAct] = useState<1 | 2>(1);
