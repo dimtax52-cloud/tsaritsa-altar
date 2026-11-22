@@ -68,12 +68,13 @@ function useTilt(enabled: boolean, gyro: boolean) {
       target.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
     };
 
-     const onTouch = (e: TouchEvent) => {
+      const onTouch = (e: TouchEvent) => {
    const t = e.touches[0];
    if (!t) return;
    target.current.x = (t.clientX / window.innerWidth - 0.5) * 2;
    target.current.y = (t.clientY / window.innerHeight - 0.5) * 2;
  };
+
 
 
     window.addEventListener('deviceorientation', onOrient, true);
