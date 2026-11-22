@@ -426,9 +426,10 @@ export default function App() {
             transform: sceneReady ? undefined : 'none',
             transition: 'opacity 1s ease',
           }}
-          key={act}
+          
         >
           <video
+            key={act}
             ref={videoRef}
             src={videoSrc}
             muted
