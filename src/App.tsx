@@ -482,6 +482,7 @@ export default function App() {
             src={videoSrc}
             muted
             playsInline
+            style={{ objectPosition: videoObjectPosition }}
             preload="auto"
             onPlaying={() => {
               setTimeout(() => setVideoReady(true), 180);
