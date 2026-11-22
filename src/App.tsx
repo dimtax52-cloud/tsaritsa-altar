@@ -462,7 +462,7 @@ export default function App() {
   const isLandscapePhone = isMobile && !isPortrait;
   const mobileSlots = useMemo(() => buildMobileSlots(ACT_SIZE), []);
   const displaySlots = useMemo(() => {
-    if (isMobile && isPortrait) return mobileSlots;
+    if (isPortrait) return mobileSlots;
     if (isLandscapePhone) {
       return actSlots.map((s) => ({
         ...s,
