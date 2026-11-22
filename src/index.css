@@ -78,6 +78,20 @@ body {
   50% { transform: translate(-50%, -50%) translateY(-6px); }
 }
 
+/* Mobile: smaller cells (C0 52px -> C6 68px), 20px avatars, 11px UID */
+@media (max-width: 768px) {
+  .const-c0 { --cell: 52px; --av: 20px; }
+  .const-c1 { --cell: 55px; --av: 20px; }
+  .const-c2 { --cell: 58px; --av: 20px; }
+  .const-c3 { --cell: 61px; --av: 20px; }
+  .const-c4 { --cell: 64px; --av: 20px; }
+  .const-c5 { --cell: 66px; --av: 20px; }
+  .const-c6 { --cell: 68px; --av: 20px; }
+  .slot-filled .cell-inner span[style] {
+    font-size: 11px !important;
+  }
+}
+
 .float-c6 {
   animation: c6Float 3.2s ease-in-out infinite;
 }

@@ -102,9 +102,9 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const finishedRef = useRef(false);
   const bgmStartedRef = useRef(false);
-  const tilt = useTilt(sceneReady && !isTouch);
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
+  const tilt = useTilt(sceneReady && !isTouch);
 
   // --- BGM: attempt autoplay; if blocked, start on first pointer/keyboard activity.
   const startBgm = useCallback(() => {
@@ -538,7 +538,6 @@ export default function App() {
               </div>
             );
           })}
-        </div>
       </div>
 
       {/* Tooltip */}
