@@ -458,7 +458,7 @@ export default function App() {
 
   // Мобильный портрет: отдельная сетка buildMobileSlots; ландшафт — десктопная
   // раскладка с компактным масштабом ячеек 0.75.
-  const isPortrait = useMediaQuery('(max-width: 768px) and (orientation: portrait)');
+  const isPortrait = useMediaQuery('(max-width: 768px)');
   const isLandscapePhone = isMobile && !isPortrait;
   const mobileSlots = useMemo(() => buildMobileSlots(ACT_SIZE), []);
   const displaySlots = useMemo(() => {
