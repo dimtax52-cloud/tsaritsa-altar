@@ -49,16 +49,28 @@ function useTilt(enabled: boolean, gyro: boolean) {
 
   useEffect(() => {
     if (!enabled) return;
-    if (gyro) {
-      // gamma: tilt left/right [-90, 90]; beta around ~45deg holding angle [-45, 45].
+        if (gyro) {
       const onOrient = (e: DeviceOrientationEvent) => {
         if (e.gamma == null || e.beta == null) return;
-        target.current.x = Math.max(-1, Math.min(1, e.gamma / 45));
-        target.current.y = Math.max(-1, Math.min(1, (e.beta - 45) / 45));
+        target.current.x = Math.max(-1, Math.min(1, e.gamma / 28));
+        target.current.y = Math.max(-1, Math.min(1, (e.beta - 45) / 28));
       };
-      window.addEventListener('deviceorientation', onOrient);
-      return () => window.removeEventListener('deviceorientation', onOrient);
+      const onMotion = (e: DeviceMotionEvent) => {
+        const g = e.accelerationIncludingGravity;
+        if (!g || g.x == null || g.y == null) return;
+        target.current.x = Math.max(-1, Math.min(1, -g.x / 5));
+        target.current.y = Math.max(-1, Math.min(1, (g.y - 6) / 5));
+      };
+      window.addEventListener('deviceorientation', onOrient, true);
+      window.addEventListener('deviceorientationabsolute', onOrient as EventListener, true);
+      window.addEventListener('devicemotion', onMotion, true);
+      return () => {
+        window.removeEventListener('deviceorientation', onOrient, true);
+        window.removeEventListener('deviceorientationabsolute', onOrient as EventListener, true);
+        window.removeEventListener('devicemotion', onMotion, true);
+      };
     }
+
     const onMove = (e: MouseEvent) => {
       target.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
       target.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
