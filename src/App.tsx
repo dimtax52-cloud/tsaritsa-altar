@@ -479,7 +479,8 @@ export default function App() {
   const videoSrc = act === 1 ? '/tsaritsa.mp4' : '/tsaritsa2.mp4';
 
   return (
-    <div className="relative w-full h-full overflow-hidden select-none">
+    <div className="relative w-full h-full overflow-hidden select-none touch-none">
+
       <canvas ref={canvasRef} className="hidden" />
       <audio ref={bgmRef} src="/bgm.mp3" preload="auto" />
 
