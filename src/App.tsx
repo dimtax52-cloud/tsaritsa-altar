@@ -8,6 +8,7 @@ import SidePanel from '@/components/SidePanel';
 import AdminPanel from '@/components/AdminPanel';
 import { IconByKey } from '@/lib/icons';
 import { renderAltarToDataUrl } from '@/lib/exportCanvas';
+import { useIsMobile, useIsTouch } from '@/lib/useMediaQuery';
 
 const SCATTER_AT = 4.5;
 const FREEZE_AT = 6.0;
@@ -29,17 +30,10 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' });
 }
 
-function actOfEntry(e: AltarEntry) {
-  const idx = entriesIndexOf(e);
+function actOfEntry(entries: AltarEntry[], e: AltarEntry) {
+  const idx = entries.indexOf(e);
   return idx >= 0 && idx < ACT_SIZE ? 1 : 2;
 }
-
-function entriesIndexOf(e: AltarEntry) {
-  return actIndexRef.current.indexOf(e);
-}
-
-// Shared ref so the module-level helper can find an entry's position.
-const actIndexRef: { current: AltarEntry[] } = { current: [] };
 
 // 3D tilt + parallax: layers translate at different speeds, the background
 // layer additionally rotates in perspective for a real angle-of-view shift.
@@ -102,12 +96,15 @@ export default function App() {
   const [adminBusy, setAdminBusy] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgmRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const finishedRef = useRef(false);
   const bgmStartedRef = useRef(false);
-  const tilt = useTilt(sceneReady);
+  const tilt = useTilt(sceneReady && !isTouch);
+  const isMobile = useIsMobile();
+  const isTouch = useIsTouch();
 
   // --- BGM: attempt autoplay; if blocked, start on first pointer/keyboard activity.
   const startBgm = useCallback(() => {
@@ -370,9 +367,12 @@ export default function App() {
     finishedRef.current = false;
     setSceneReady(false);
     setPanelOpen(false);
+    setVideoReady(false);
     const v = videoRef.current;
     if (v) {
       v.currentTime = 0;
+      // Same source: loadeddata won't re-fire, so reveal from readyState.
+      if (v.readyState >= 2) setVideoReady(true);
       v.play().catch(() => {});
     }
   }, []);
@@ -387,6 +387,7 @@ export default function App() {
       setSceneReady(false);
       setPanelOpen(false);
       setHovered(null);
+      setVideoReady(false);
     },
     [act]
   );
@@ -395,6 +396,16 @@ export default function App() {
   const midBind = tilt.bind(28, 3.0, 2.0); // вихри и сияние
   const frontBind = tilt.bind(58, 3.8, 2.5); // значки и ближний снег
 
+  // На мобильных растягиваем раскладку к краям (6% / 94%), центр остаётся свободным.
+  const displaySlots = useMemo(() => {
+    if (!isMobile) return actSlots;
+    return actSlots.map((s) => {
+      const d = s.x - 50;
+      const x = Math.min(94, Math.max(6, 50 + d * 1.3));
+      return { ...s, x };
+    });
+  }, [actSlots, isMobile]);
+
   const videoSrc = act === 1 ? '/tsaritsa.mp4' : '/tsaritsa2.mp4';
 
   return (
@@ -402,8 +413,9 @@ export default function App() {
       <canvas ref={canvasRef} className="hidden" />
       <audio ref={bgmRef} src="/bgm.mp3" preload="auto" />
 
-      {/* Фон: видео Царицы активного акта, 110% зум, tilt + параллакс после финала */}
-      <div className="absolute inset-0 overflow-hidden">
+      {/* Фон: видео Царицы активного акта. Пока первый кадр нового ролика не готов,
+          слой закрыт тёмно-синей плашкой, чтобы не мелькал кадр прошлого акта. */}
+      <div className={`absolute inset-0 overflow-hidden ${videoReady ? '' : 'bg-[#06101e]'}`}>
         <div
           {...bgBind}
           className="absolute"
@@ -422,7 +434,11 @@ export default function App() {
             muted
             playsInline
             preload="auto"
-            className="w-full h-full object-cover"
+            onLoadedData={() => setVideoReady(true)}
+            onCanPlay={() => setVideoReady(true)}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              videoReady ? 'opacity-100' : 'opacity-0'
+            }`}
           />
         </div>
         <div
@@ -431,19 +447,19 @@ export default function App() {
         />
       </div>
 
-      {/* Средний слой: анимированные вихри, сияние и метель */}
+      {/* Средний слой: метель (на тач-устройствах — лёгкий снегопад) */}
       <div {...midBind} className="absolute -inset-6 pointer-events-none">
-     
-        <Snowfall count={30} totalPower={totalPower} storm={sceneReady} />
+        <Snowfall count={isTouch ? 12 : 30} totalPower={isTouch ? 0 : totalPower} storm={sceneReady && !isTouch} />
       </div>
      
 
 
-      {/* Передний слой: значки анонов и парящие снежинки */}
+      {/* Передний слой: значки анонов и лёгкие парящие снежинки (на тач-устройствах — меньше) */}
       <div {...frontBind} className="absolute -inset-3">
-        
-        <div className="absolute inset-0">
-                   {actSlots.map((slot, i) => {
+        <div className="absolute inset-0 pointer-events-none">
+          <Snowfall count={isTouch ? 8 : 0} totalPower={0} storm={false} />
+        </div>
+                   {displaySlots.map((slot, i) => {
             const entry = actBySlot[i];
             return (
               <div
@@ -543,14 +559,14 @@ export default function App() {
         </div>
       )}
 
-      {/* Top-left counters + act switcher */}
+      {/* Top-left counters + act switcher (на мобильных — компактная плашка ниже кнопок) */}
       <div
-        className={`absolute top-4 left-4 z-30 glass rounded-xl px-4 py-3 transition-opacity duration-1000 ${
+        className={`absolute top-4 left-4 z-30 glass rounded-xl px-4 py-3 transition-opacity duration-1000 max-[768px]:top-auto max-[768px]:bottom-20 max-[768px]:left-2 max-[768px]:px-2.5 max-[768px]:py-2 max-[768px]:max-w-[62vw] ${
           sceneReady ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <p className="text-[10px] uppercase tracking-[0.25em] text-sky-200/60">/genshin/ • Алтарь Царицы</p>
-        <div className="flex items-center gap-4 mt-1.5">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-sky-200/60 max-[768px]:hidden">/genshin/ • Алтарь Царицы</p>
+        <div className="flex items-center gap-4 mt-1.5 max-[768px]:gap-2.5 max-[768px]:mt-0 max-[768px]:text-xs">
           <span className="flex items-center gap-1.5 text-sky-50">
             <Users size={15} className="text-sky-300" />
             <b className="font-mono">{totals.total}</b>
@@ -607,9 +623,20 @@ export default function App() {
         </button>
       </div>
 
-      {/* Side signup panel */}
+      {/* Side signup panel — на мобильных превращается в нижнюю шторку */}
       {sceneReady && (
-        <SidePanel open={panelOpen} onToggle={() => setPanelOpen((o) => !o)} onSubmit={handleSignup} />
+        <SidePanel open={panelOpen} onToggle={() => setPanelOpen((o) => !o)} onSubmit={handleSignup} isMobile={isMobile} />
+      )}
+
+      {/* Мобильная кнопка «Записаться» снизу */}
+      {sceneReady && isMobile && !panelOpen && (
+        <button
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 btn-ice glass rounded-full px-6 py-3 text-sm shadow-lg"
+          onClick={() => setPanelOpen(true)}
+        >
+          <SnowflakeShape className="w-4 h-4" />
+          Записаться
+        </button>
       )}
 
       {/* Admin lock bottom-right */}
@@ -698,7 +725,7 @@ export default function App() {
               Созвездие C{selected.constellation} • Пробуждение R{selected.refinement}
             </p>
             <p className="text-xs text-sky-200/60 mt-1">
-              Акт {actOfEntry(selected)} • {fmtDate(selected.created_at)}
+              Акт {actOfEntry(entries, selected)} • {fmtDate(selected.created_at)}
             </p>
             {selected.message && (
               <p className="font-display text-lg text-sky-100/90 italic mt-4 leading-relaxed">
