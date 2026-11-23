@@ -307,10 +307,10 @@ export default function SidePanel({ open, onToggle, onSubmit, isMobile = false }
           onClick={onToggle}
         />
         <div
-          className={`fixed left-0 right-0 bottom-0 z-50 glass rounded-t-2xl p-4 pb-8 transition-transform duration-300 ease-out ${
-            open ? 'translate-y-0' : 'translate-y-full'
+          className={`fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-2xl bg-[#0b1728]/95 border-t border-sky-200/20 p-4 pb-8 transition-transform duration-300 ease-out ${
+            open ? 'translate-y-0' : 'translate-y-full pointer-events-none'
           }`}
-          style={{ maxHeight: '92dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
+          style={{ WebkitOverflowScrolling: 'touch' }}
         >
           <div className="w-10 h-1 rounded-full bg-sky-200/40 mx-auto mb-3" />
           {content}

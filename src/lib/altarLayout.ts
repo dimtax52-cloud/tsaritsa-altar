@@ -110,7 +110,7 @@ export function buildMobileSlots(count = 76): CellSlot[] {
   for (let row = 0; row < perCol && out.length < count; row++) {
     for (let c = 0; c < 6 && out.length < count; c++) {
       const x = c < 3 ? leftCols[c] : rightCols[c - 3];
-      const y = 15 + (row / (perCol - 1)) * 61;
+      const y = 14 + (row / (perCol - 1)) * 61;
       out.push({ id: out.length, x, y, size: 0, angle: 0 });
     }
   }

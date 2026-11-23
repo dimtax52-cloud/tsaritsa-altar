@@ -380,9 +380,4 @@ select.input-ice option {
   box-shadow: 0 0 14px rgba(56, 189, 248, 0.75), inset 0 0 8px rgba(186, 230, 253, 0.45);
   border-color: rgba(125, 211, 252, 0.95);
 }
-/* Фикс мерцания размытого UI поверх 3D-слоёв на мобильных */
-[class*="backdrop-blur"] {
-  -webkit-transform: translate3d(0, 0, 1px);
-  transform: translate3d(0, 0, 1px);
-  backface-visibility: hidden;
-}
+

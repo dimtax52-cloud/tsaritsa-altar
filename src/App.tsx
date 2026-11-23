@@ -199,8 +199,19 @@ export default function App() {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     (async () => {
-      const { data } = await supabase.from('altar_entries').select('*').order('created_at', { ascending: true });
-      if (data) setEntries(data);
+      // Up to 3 attempts: mobile/VPN connections often drop the first request.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { data, error } = await supabase
+          .from('altar_entries')
+          .select('*')
+          .order('created_at', { ascending: true });
+        if (!error && data && data.length > 0) {
+          setEntries(data);
+          break;
+        }
+        if (!error && data) setEntries(data);
+        if (attempt < 2) await new Promise((r) => setTimeout(r, 1500));
+      }
       setLoading(false);
 
       channel = supabase
@@ -355,7 +366,7 @@ export default function App() {
   }, [actBySlot, actSlots, totals, act]);
 
   const handleAdminUpdate = useCallback(
-    async (id: string, patch: Partial<AltarEntry>) => {
+    async (id: string, patch: Partial<AltarEntry> & { new_avatar_url?: string | null }) => {
       const pass = adminPass || window.prompt('Пароль администратора:') || '';
       const { data, error } = await supabase.rpc('admin_update_entry', {
         pass,
@@ -364,6 +375,7 @@ export default function App() {
         new_refinement: patch.refinement ?? 0,
         new_icon: patch.icon ?? 'snowflake',
         new_message: patch.message ?? null,
+        new_avatar_url: patch.new_avatar_url ?? null,
       });
       if (error || !data) {
         setAdminError('Неверный пароль');
@@ -632,7 +644,7 @@ export default function App() {
 
       {/* Top-left counters + act switcher (на мобильных — компактная плашка ниже кнопок) */}
       <div
-        className={`absolute top-4 left-4 z-30 glass rounded-xl px-4 py-3 transition-opacity duration-1000 max-[768px]:top-auto max-[768px]:bottom-20 max-[768px]:left-2 max-[768px]:px-2.5 max-[768px]:py-2 max-[768px]:max-w-[62vw] ${
+        className={`absolute top-4 left-4 z-30 glass rounded-xl px-4 py-3 transition-opacity duration-1000 bg-[#071120]/80 max-[768px]:top-auto max-[768px]:bottom-20 max-[768px]:left-2 max-[768px]:px-2.5 max-[768px]:py-2 max-[768px]:max-w-[62vw] ${
           sceneReady ? 'opacity-100' : 'opacity-0'
         }`}
       >
